@@ -1,0 +1,18 @@
+# Minecraft runtime
+world/
+world_nether/
+world_the_end/
+logs/
+crash-reports/
+cache/
+backups/
+usercache.json
+banned-ips.json
+banned-players.json
+ops.json
+whitelist.json
+server-icon.png
+
+# Server binaries and plugins
+paper.jar
+plugins/*.jar
