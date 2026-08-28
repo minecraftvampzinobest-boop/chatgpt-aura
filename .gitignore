@@ -15,4 +15,10 @@ server-icon.png
 
 # Server binaries and plugins
 paper.jar
+paper-*.jar
 plugins/*.jar
+
+# Local Playit credentials / runtime files
+.config/
+playit.toml
+*.log
