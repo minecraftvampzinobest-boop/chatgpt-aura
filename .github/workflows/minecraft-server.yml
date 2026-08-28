@@ -1,0 +1,70 @@
+name: Minecraft Paper + Geyser
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: minecraft-server
+  cancel-in-progress: false
+
+jobs:
+  server:
+    runs-on: self-hosted
+    timeout-minutes: 0
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare folders
+        shell: powershell
+        run: |
+          New-Item -ItemType Directory -Force -Path plugins, backups | Out-Null
+          if (-not (Test-Path eula.txt)) {
+            Set-Content eula.txt 'eula=true' -Encoding ascii
+          }
+
+      - name: Check Paper
+        shell: powershell
+        run: |
+          if (-not (Test-Path paper.jar)) {
+            throw 'paper.jar não encontrado. Coloque o Paper na raiz do repositório/runner.'
+          }
+
+      - name: Check Geyser
+        shell: powershell
+        run: |
+          if (-not (Test-Path plugins/Geyser-Spigot.jar)) {
+            throw 'Geyser-Spigot.jar não encontrado em plugins/.'
+          }
+          if (-not (Test-Path plugins/floodgate-spigot.jar)) {
+            throw 'floodgate-spigot.jar não encontrado em plugins/.'
+          }
+
+      - name: Start Paper
+        shell: powershell
+        run: |
+          while ($true) {
+            Write-Host '=== Iniciando Paper ==='
+            & java -Xms2G -Xmx4G -jar paper.jar nogui
+            $code = $LASTEXITCODE
+
+            if ($code -eq 0) {
+              Write-Host 'Servidor encerrado normalmente.'
+              break
+            }
+
+            Write-Warning "Paper encerrou com código $code. Reiniciando em 10 segundos..."
+            Start-Sleep -Seconds 10
+          }
+
+      - name: Backup worlds
+        if: always()
+        shell: powershell
+        run: |
+          if (Test-Path world) {
+            $stamp = Get-Date -Format 'yyyy-MM-dd_HH-mm-ss'
+            $zip = "backups/world-$stamp.zip"
+            Compress-Archive -Path world,world_nether,world_the_end -DestinationPath $zip -Force -ErrorAction SilentlyContinue
+            Write-Host "Backup: $zip"
+          }
